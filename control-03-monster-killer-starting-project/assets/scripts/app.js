@@ -10,14 +10,27 @@ const LOG_EVENT_PLAYER_STRONG_ATTACK = "PLAYER_STRONG_ATTACK";
 const LOG_EVENT_MONSTER_ATTACK = "MONSTER_ATTACK";
 const LOG_EVENT_PLAYER_HEAL = "PLAYER_HEAL";
 const LOG_EVENT_GAME_OVER = "GAME_OVER";
-const enteredNumber = prompt("Maximum life for you and the monster!");
-
-let chosenMaxLife = parseInt(enteredNumber);
 let battleLog = [];
 
-if (isNaN(enteredNumber) || enteredNumber <= 0) {
-  chosenMaxLife = 100;
+function getMaxLife() {
+  const enteredNumber = prompt("Maximum life for you and the monster!");
+  const parsedNunmber = parseInt(enteredNumber);
+  if (isNaN(parsedNunmber) || parsedNunmber <= 0) {
+    throw {
+      message: "invalid user input , not a number !",
+    };
+  }
+  return parsedNunmber;
 }
+let chosenMaxLife;
+try {
+  chosenMaxLife = getMaxLife();
+} catch (error) {
+  console.log(error);
+  chosenMaxLife = 100;
+  alert("your entered a wrong number , so default value of 100 was chosen");
+}
+
 let currentMonsterHealth = chosenMaxLife;
 let currentPlayerHealth = chosenMaxLife;
 let hasBonusLife = true;
@@ -31,7 +44,23 @@ function writeToLog(ev, val, monsterHealth, playerHealth) {
     finalMonsterHealth: monsterHealth,
     finalPlayerHealth: playerHealth,
   };
-  if (ev === LOG_EVENT_PLAYER_ATTACK) {
+  switch (ev) {
+    case LOG_EVENT_PLAYER_ATTACK:
+      logEntry.target = "Monster";
+      break;
+    case LOG_EVENT_PLAYER_STRONG_ATTACK:
+      logEntry.target = "Monster";
+      break;
+    case LOG_EVENT_MONSTER_ATTACK:
+      logEntry.target = "Player";
+      break;
+    case LOG_EVENT_PLAYER_HEAL:
+      logEntry.target = "Player";
+      break;
+
+    default:
+  }
+  /*if (ev === LOG_EVENT_PLAYER_ATTACK) {
     logEntry.target = "Monster";
   } else if (ev === LOG_EVENT_PLAYER_STRONG_ATTACK) {
     logEntry.target = "Monster";
@@ -39,7 +68,7 @@ function writeToLog(ev, val, monsterHealth, playerHealth) {
     logEntry.target = "Player";
   } else if (ev === LOG_EVENT_PLAYER_HEAL) {
     logEntry.target = "Player";
-  }
+  }*/
   battleLog.push(logEntry);
 }
 
@@ -98,22 +127,17 @@ function endRound() {
   }
 }
 function attackMonster(mode) {
-  let maxDamage;
-  let logEvent;
-  if (mode === MODE_ATTACK) {
-    maxDamage = dealMonsterDamage(ATTACK_VALUE);
-    logEvent=LOG_EVENT_PLAYER_ATTACK
-  } else {
-    maxDamage = dealMonsterDamage(STRONG_ATTACK_VALUE);
-    logEvent=LOG_EVENT_PLAYER_STRONG_ATTACK
-  }
+  const maxDamage =
+    mode === MODE_ATTACK
+      ? dealMonsterDamage(ATTACK_VALUE)
+      : dealMonsterDamage(STRONG_ATTACK_VALUE);
+  const logEvent =
+    mode === MODE_ATTACK
+      ? LOG_EVENT_PLAYER_ATTACK
+      : LOG_EVENT_PLAYER_STRONG_ATTACK;
+
   currentMonsterHealth -= maxDamage;
-  writeToLog(
-    logEvent,
-    maxDamage,
-    currentMonsterHealth,
-    currentPlayerHealth
-  )
+  writeToLog(logEvent, maxDamage, currentMonsterHealth, currentPlayerHealth);
   endRound();
 }
 
@@ -139,7 +163,7 @@ function healPlayerHandler() {
     healValue,
     currentMonsterHealth,
     currentPlayerHealth
-  )
+  );
   endRound();
 }
 function printLogHandler() {
